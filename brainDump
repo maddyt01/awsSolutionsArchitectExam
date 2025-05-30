@@ -1,0 +1,197 @@
+AWS Well-Architected Framework 
+https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html
+
+-decision-making framework for building with/on AWS
+-describes best practices and strategies to use when designing + operating a cloud workload
+
+-pillars:
+  -design and operate reliable systems
+  -design and operate secure systems
+  -design and operate efficient systems
+  -design and operate cost-effective systems
+  -design and operate sustainable systems
+
+-aws also provides Well Architected tool (cloud service) for reviewing architecture
+-also includes the following general design principles ->
+  -stop guessing your capacity needs 
+  -test systems at production scale
+  -automate with architectural experimentation in mind
+  -consider evolutionary architectures
+  -drive architectures using data
+  -improve through game days (simulate events in production)
+-organization, prepare, operate, evolve
+
+  Pillar 1: Operational Excellence
+  -commitment to build software correctly 
+  -deliver great customer experience
+  -team organization, workload design, operating at scale, evolution
+    -organize teams around business outcomes 
+    -implement observability for actionable insights (collect data about key metrics and use it to take action)
+    -safely automate where possible (reduce undifferentiated heavy lifting)
+    -make frequent, small, reversible changes (scalable, loosely coupled workloads allow for faster adaptation)
+    -refine operations procedure frequently (continous improvement)
+    -anticipate failure (simulate failure to understand risks)
+    -use managed services (aws managed services reduce operational overhead)
+    
+--------------------------------------------------------------------------------------------------------
+AWS Cloud Adoption Framework
+https://docs.aws.amazon.com/whitepapers/latest/overview-aws-cloud-adoption-framework/welcome.html
+
+
+
+--------------------------------------------------------------------------------------------------------
+AWS Services:
+
+EC2 (aka elastic compute cloud)
+-AWS fundamental compute service
+-charged based on instance type and compute used
+-Rent virtual machines in the cloud
+-use EBS to store data on virtual drives in the cloud
+-Scale with auto scaling group
+-User Data is used to bootstrap (run commands for setup) an EC2 instance
+  -script only run once, at the first start of instance
+  -install updates, install software, download common files from the internet, etc.
+  -run with root user priveleges by default
+-Can attach elastic IP ->
+  -if you need a consistent IP address when an instance is repeatedly stopped and started
+  -public IP that the user owns as long as they want
+  -mask instance failure by rapidly remapping the address to another instance
+  -soft limit of 5 elastic IPs 
+  -avoid when possible (use random public IP + DNS name)
+-Multiple instance types ->
+  -On-demand Instances
+    -short workload, predictable pricing
+    -
+
+
+Lambda
+-build serverless / microservices application
+-run time >15 minutes
+-functions
+
+ELB (Elastic Load Balancer)
+-2 kinds of load balncers for creating highly avaliable systems
+-Application Load Balancer (ALB): http 
+-Network Load Balancer (NLB): high performance, non http (gaming, udp)
+
+Auto Scaling
+-ASG (Auto Scaling Group)
+
+EBS (Elastic Block Store)
+-block storage
+-ec2 primary storage solution
+
+S3 (aka simple storage service)
+-object storage
+-different tiers, infrequent access, glacier, etc.
+-storing content, static websites, photos, etc.
+-transition between storage tiers with life cycle policies 
+
+Storage Gateway
+-storage service
+
+RDS (aka relational database service)
+-supports multiple db engines including Amazon Aurora
+-Amazon Aurora
+-PostGreSql
+-Microsoft SQL server
+-My SQL
+
+DynamoDB
+-No SQL database
+-fully managed -> aka serverless 
+ECS (aka elastic container service)
+
+Elasticache
+-redis / memcached
+-not for content delivery
+-improve data throughput
+
+Redshift:
+-Data lake / warehouse
+-data storage and analytics
+-petabyte scale
+
+VPC (Virtual Private Cloud)
+
+NACL (aka Network Access Control List)
+
+Security Groups
+-aws firewalls essentially
+-fundamental networking security in AWS 
+-control port access, EC2 i/o traffic
+-support IPv4 and IPv6
+-can attach to multiple instances at once
+-region+vpc level / locked
+-"live" outside EC2 instances-- EC2 instance cannot see group if traffic is blocked
+-best practice is to maintain one separate security group for SSH access
+-request for application times out ? probably a security group issue
+-request response == connection refused ? traffic went through the security group, it is an application error
+-default behavior == all inbound traffic blocked, all outbound traffic allowed
+-security group can allow traffic from another security group
+-security groups can reference eachother, 
+so no need to reference IP of the instance to which a security group is attached
+
+
+Route 53 
+-DNS routing
+-translate www.example.com into IP address
+-Alias Records
+-CName Records
+
+IAM (aka Identity and Access Management)
+-users -> individual users
+-groups -> assign users to group (ex. admin group)
+-policies -> attach policies to users, groups and rules to give permissions
+-roles -> temporary/short term credentials
+
+Cloudwatch
+-AWS monitoring
+-CloudWatch Logs 
+-Alarms
+-Custom metrics with CloudWatch Agent 
+
+Cloudtrail
+-logging
+
+Kinesis
+-real time data
+-Kinesis Data Streams
+-Kinesis Firehose
+-Kinesis sharding
+
+Cloudfront
+-CDN (Content Delivery Network)
+-accelerate websites
+-content sources include: 
+
+SQS (aka Simple Queue Service)
+-decouple applications
+-fifo queue vs standard queue
+
+SNS (Simple Notification Service)
+-another service used for decoupling
+
+CloudFormation
+-templates and configurations
+
+AWS Global Accelerator
+
+EFA (aka elastic fabric adapter)
+-next level up of ENA (elastic network adapter)
+-big data
+
+AWS DataSync
+-data transfer
+
+Amazon FSx
+-for lustre
+-for microsoft active directory
+
+AWS Glue
+-prepare data for analytics
+-ETL (extract, transform, load) operations
+
+
+
+ 
