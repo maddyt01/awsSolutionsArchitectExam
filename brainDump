@@ -1,7 +1,7 @@
 AWS Well-Architected Framework 
 https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html
 
--decision-making framework for building with/on AWS
+-decision-making framework for building with / on AWS
 -describes best practices and strategies to use when designing + operating a cloud workload
 
 -pillars:
@@ -44,7 +44,7 @@ AWS Services:
 
 EC2 (aka elastic compute cloud)
 -AWS fundamental compute service
--charged based on instance type and compute used
+-billed/charged based on instance type and compute used by the second
 -Rent virtual machines in the cloud
 -use EBS to store data on virtual drives in the cloud
 -Scale with auto scaling group
@@ -61,7 +61,57 @@ EC2 (aka elastic compute cloud)
 -Multiple instance types ->
   -On-demand Instances
     -short workload, predictable pricing
-    -
+  -Reserved
+    -known amount of time, a year or longer
+    -long term commitment
+    -use for steady state usage applications (ex. database)
+      -convertible reserved instances == long workloads with flexible instance types
+      -scheduled reserved instances == instances reserved for a longer period used on a set schedule
+  -Spot Instances == short workloads, can be interrupted, risk of losing instance, cheaper
+    -use with failure resilient workloads
+    -name your price, buy if its within your price range (giving stocks)
+      -persistent requests (want to maintain n instances as long as request is active)
+      -one time requests (request goes away once its fulfilled)
+    -can cancel open / active / disabled instance requests
+    -cancelling a request does not terminate launched instances; must cancel the request and then terminate associated instances
+  -Dedicated Instances == private / personal underlying hardware for amazon account/organization
+  -Dedicated Hosts == book an entire physical server, gain access to controlling physical placement of instances
+-AMI (Amazon Machine Image)
+  -region-locked
+  -can pre-install packages, boot faster, active directory etc.
+  -EC2 instance configuration / template
+  -can share AMI cross account
+  -public AMIs / can rent AMI from AWS Marketplace
+  -"golden AMI"
+-Instance placement Groups
+  -Cluster == low latency group in a single AZ
+    -good for networking, big data jobs, high speed, extremely low latency, high network throughput
+  -Spread == spread instances across underlying hardware (7 instances / group / AZ)
+    -can span multiple AZs, reduce risk of simultaneous failure
+    -application that needs to maximize high availability, 
+    -mission-critical applications + isolating each instance from failure
+  -Partition == Spread instances across many different paritions / sets of racks within an AZ
+    -Hadoop, Cassandra, Kafka
+    -up to 7 partitions / AZ
+    -hundreds of EC2 instances / AZ
+    -HDFS, HBase, Cassandra, Kafka
+-ENI (Elastic Network Interface)
+  -Virtual network card
+  -can have the following attributes:   
+    -primary private IPv4 address
+    -1+ secondary IPv4 addresses
+    -1 elastic IP / private IPv4
+    -1 public IPv4
+  -can be created independently from EC2 instances
+  -can be transferred between EC2 instances
+  -bound to specific available zone
+  -can have security groups attached to them
+    -EC2 instances have primary ENI (eth0), can attach a secondary ENI (making eth1 interface available)
+-EC2 Hibernate
+  -additional instance state to stopped / terminated state
+  -pause instance, all data from RAM is preserved
+  -instance boot is faster
+  -root EBS volume must be encrypted
 
 
 Lambda
