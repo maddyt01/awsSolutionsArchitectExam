@@ -1,3 +1,10 @@
+General Source List
+-https://awsfirstcloudjourney.github.io/
+-Stephane Maarek's Ultimate AWS Certified Solutions Architect Associate 2025 course on udemy
+https://www.udemy.com/course/aws-certified-solutions-architect-associate-saa-c03/
+
+
+
 AWS Well-Architected Framework 
 https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html
 
@@ -69,6 +76,7 @@ EC2 (aka elastic compute cloud)
       -scheduled reserved instances == instances reserved for a longer period used on a set schedule
   -Spot Instances == short workloads, can be interrupted, risk of losing instance, cheaper
     -use with failure resilient workloads
+    -spot fleet is a set of spot instances and optional on-demand instances. 
     -name your price, buy if its within your price range (giving stocks)
       -persistent requests (want to maintain n instances as long as request is active)
       -one time requests (request goes away once its fulfilled)
@@ -113,6 +121,21 @@ EC2 (aka elastic compute cloud)
   -instance boot is faster
   -root EBS volume must be encrypted
 
+Security Groups
+-aws firewalls essentially
+-fundamental networking security in AWS 
+-control port access, EC2 i/o traffic
+-support IPv4 and IPv6
+-can attach to multiple instances at once
+-region+vpc level / locked
+-"live" outside EC2 instances-- EC2 instance cannot see group if traffic is blocked
+-best practice is to maintain one separate security group for SSH access
+-request for application times out ? probably a security group issue
+-request response == connection refused ? traffic went through the security group, it is an application error
+-default behavior == all inbound traffic blocked, all outbound traffic allowed
+-security group can allow traffic from another security group
+-security groups can reference eachother, 
+so no need to reference IP of the instance to which a security group is attached
 
 Lambda
 -build serverless / microservices application
@@ -120,16 +143,128 @@ Lambda
 -functions
 
 ELB (Elastic Load Balancer)
+-forward internet traffic to multiple servers 
+-expose single point of access to the application (using dns aka domanin name)
+-regular instance health checks
+  -health checks let LB know if instances are available to respond to requests
+  -done using a port and a route, if response is 200, unhealthy
+-stickiness for cookies
+-highly available (cross multiple AZs, not regions)
+-separate public and private traffic
+-managed load balancer, handled / managed by AWS
+-Integrated with many AWS systems out of the box, more flexible than 
+
 -2 kinds of load balncers for creating highly avaliable systems
--Application Load Balancer (ALB): http 
--Network Load Balancer (NLB): high performance, non http (gaming, udp)
+-Application Load Balancer (ALB): LAYER 7, http or https, support websockets 
+  -use cases: microservices, containerized applications
+  -have port mapping to redirect to dynamic ports for ECS tasks
+  -route to http applications across multiple machines aka target groups
+  -target groups can contain ec2 instances, ecs tasks, lambda functions, private ip addresses
+
+-Network Load Balancer (NLB): LAYER 4, high performance, non http (gaming, udp)
+  -forward tcp and udp traffic to instances
+    -UDP: User Datagram Protocol - connectionless, speed over accuracy
+    -TCP: Transmission Control Protocol - reliable, correctly ordered, http relies on TCP standard
+  -millions of requests / second
+  -lower latency
+  -one static IP per AZ, supports elastic IPs
+
++Gateway Load Balancer
+
+Cross-Zone Load Balancing
+-Load is balanced evenly across multiple AZs
+-Always on for ALB (cannot disable), no charges
+-For NLB, disabed by default, enabling costs extra
+
+SSL/TLS Certificates
+-Secure Socket Layer / Transport Layer Security
+-manage certificates in AWS with AWS Certificate Manager 
+
+SNI Server Name Indication
+-allows you to load multiple SSL certificates on one web server
+
+ELB connection draining/ deregistration delay
+-time to complete active/in progress requests while the instance is de registering or unhealthy
+-allows instance to terminate activity
+-LB stops sending new requests, can set the time period or set to 0 seconds to disable
 
 Auto Scaling
 -ASG (Auto Scaling Group)
+-scale out/in EC2 instances to match increased/decreased load
+-can scale based on CloudWatch Alarms
+-alarm monitors metric --> metrics are computed for overall ASG instance
+-enforce min/max instances running
+-ASG Launch Configurationss include the following
+    -AMI and Instance Type
+    -EC2 User Data (startup scripts/ bootstrapping)
+    -EBS Volumes (storage)
+    -Security Groups
+    -SSH Key Pair
+-auto scaling new rules? auto scaling rules managed directly by EC2 instance (simpler setup)
+-can scale based on custom metrics
+-legacy = launch configurations, one instance type
+-new = launch templates, can use spot fleet of instances
+-update asg ? provide new launch config/template
+-ASGs are free, we pay for underlyinf resources launched
+-replace any instances under an asg, terminate unhealthy instance
+-EC2 health checks, ELB health checks
+-Scaling policies include:
+  -target tracking scaling (most simple), we want x metric to stay at y level
+  -simple/step scaling -> scale response to "severity"
+  -scheduled actions/scaling
+-Can specify scaling cool-down time -> used when scale-in policy terminates instances based on metric
+-can suspend and resume scaling process
+-default delete policy = which az has the most instances ? delete one with oldest launch config (then template)
+-launch configs must be recreated every time, while launch templates can have multiple versions
 
 EBS (Elastic Block Store)
 -block storage
 -ec2 primary storage solution
+-EC2 instance loses EBS root volume when it is manually terminated
+-network drive attached to an EC2 instance
+-because its a network drive, it communicates with the instance through the network which introduces latency
+-can be detached/ reattached between instances
+-AZ level
+-to move an EBS volume volume cross AZ, must create a snapshot
+-EBS volumes have provisioned capacity
+-Volume types: 
+  -GP2 = general purpose ssd (possible boot vol)
+    -max IOPS is 16,000
+  -IO1 = highest performance ssd for mission critical low latency/ high throughput (possible boot vol)
+    -use when we require IOPS over 16,000 (maximum 64,000 IOPS / volume)
+    -business critical applications
+    -large database workloads
+  -ST1 = low cost, frequent access hdd volume
+    -use case: streaming workloads (fast throughput for cheaper)
+    -max IOPS = 500
+  -SC1 = less frequently accessed data hdd (cold storage)
+    -throughput oriented, large volumes of infrequently accessed data
+    -max IOPS is 250
+-EBS snapshots -> incremental, only new changes updated/backed up
+-EBS snapshots/backups consume IO -> tough on traffic handling
+-snapshots stored in s3 (we don't see them/have direct access)
+-snapshot can be turned into AMI, snapshots can be copied across AZs
+-EBS Volumes are AZ-locked, so to migrate to another AZ or region, must use snapshots
+-EBS encryption
+    -encrypted EBS volumes = data at rest encrypted in the volume, all snapshots/volumes they create are encrypted
+    -all data in flight are encrypted (instance to volume and vice versa)
+
+EBS vs. Instance Store
+-instances that do not come w a root EBS volume come w an instance store
+  -physically attached to the machine (EBS is network drive)
+  -provide better i/o
+  -ephemeral / temporary storage -> buffer, scratch work, cache etc.
+-survives a reboot but on stop or termination of the instance its attached to, data is lost
+-cannot resize instances
+-must handle backups manually
+
+EFS (Elastic File System)
+-managed Network File System (NFS) that you mount on ec2 instances
+-highly available, scalable, but more expensive than EBS
+- use cases: wordpress, web services, content management, data sharing, etc.
+-can use security groups to controll access to EFS volumes
+-can easily grow to petabyte scale
+-only available for linux instances
 
 S3 (aka simple storage service)
 -object storage
@@ -142,10 +277,26 @@ Storage Gateway
 
 RDS (aka relational database service)
 -supports multiple db engines including Amazon Aurora
--Amazon Aurora
--PostGreSql
--Microsoft SQL server
--My SQL
+  -Amazon Aurora
+  -PostgreSql
+  -Microsoft SQL server
+  -MySQL
+  -MariaDB
+-managed service, main disadvantage is that there is no ssh into the instance that hosts the database
+-backups auto-enabled
+-provides automated backups, and allows DB snapshots, manually triggered backups by users
+-use (up to 5) read replicas to scale read ops
+-main db data is replicated async to the read replica, reads are eventually consistent
+-read replicas can be promoted into their own database 
+-multi az rds = disaster recovery (not scaling)
+-RDS provides encryption at rest for main db and read replicas with AWS KMS encryption
+-in flight encryption uses SSL certificates to encrypt data from client to RDS in flight
+-can copy an un-encrypted db snapshot into an encrypted one
+-security-wise, RDS databases are usually deployed w/in private subnet
+-security leverages security groups like EC2 does
+-IAM policies can control who manages RDS database -> works with MySQL and PostgreSql
+-encryption at rest is done when db is created
+-we must deal with security/ routing/ users within the db, aws handles db patching and underlying os patching
 
 DynamoDB
 -No SQL database
@@ -165,23 +316,6 @@ Redshift:
 VPC (Virtual Private Cloud)
 
 NACL (aka Network Access Control List)
-
-Security Groups
--aws firewalls essentially
--fundamental networking security in AWS 
--control port access, EC2 i/o traffic
--support IPv4 and IPv6
--can attach to multiple instances at once
--region+vpc level / locked
--"live" outside EC2 instances-- EC2 instance cannot see group if traffic is blocked
--best practice is to maintain one separate security group for SSH access
--request for application times out ? probably a security group issue
--request response == connection refused ? traffic went through the security group, it is an application error
--default behavior == all inbound traffic blocked, all outbound traffic allowed
--security group can allow traffic from another security group
--security groups can reference eachother, 
-so no need to reference IP of the instance to which a security group is attached
-
 
 Route 53 
 -DNS routing
