@@ -1,12 +1,10 @@
 General Source List
 -https://awsfirstcloudjourney.github.io/
 -Stephane Maarek's Ultimate AWS Certified Solutions Architect Associate 2025 course on udemy
-https://www.udemy.com/course/aws-certified-solutions-architect-associate-saa-c03/
-
-
-
+  https://www.udemy.com/course/aws-certified-solutions-architect-associate-saa-c03/
+--------------------------------------------------------------------------------------------------------
 AWS Well-Architected Framework 
-https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html
+  https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html
 
 -decision-making framework for building with / on AWS
 -describes best practices and strategies to use when designing + operating a cloud workload
@@ -27,7 +25,7 @@ https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html
   -drive architectures using data
   -improve through game days (simulate events in production)
 -organization, prepare, operate, evolve
-
+--------------------------------------------------------------------------------------------------------
   Pillar 1: Operational Excellence
   -commitment to build software correctly 
   -deliver great customer experience
@@ -141,6 +139,8 @@ Lambda
 -build serverless / microservices application
 -run time >15 minutes
 -functions
+-1000 concurrent executions per AWS account per region -> can contact aws support to increase limit
+
 
 ELB (Elastic Load Balancer)
 -forward internet traffic to multiple servers 
@@ -170,6 +170,16 @@ ELB (Elastic Load Balancer)
   -one static IP per AZ, supports elastic IPs
 
 +Gateway Load Balancer
+
+AWS transit gateway
+-route traffic within network
+-hub and spoke model to interconnect VPCS and on-premise networks
+-network transit hub 
+-on its own cannot be used to establish low latency / high throughput connection between on prem/cloud
+
+VPC peering
+-route traffic between 2 vpcs (not transitive)
+-good to connect 2 VPCs
 
 Cross-Zone Load Balancing
 -Load is balanced evenly across multiple AZs
@@ -217,6 +227,11 @@ Auto Scaling
 -default delete policy = which az has the most instances ? delete one with oldest launch config (then template)
 -launch configs must be recreated every time, while launch templates can have multiple versions
 
+-for an EC2 instance in an ASG, in order to patch/ do something with the instance without triggering the provisioning of new resources
+-enter Standby state
+  -deregister instance from load balancer or ASG target group
+  -when in standby mode, can update or troubleshoot an instnace
+
 EBS (Elastic Block Store)
 -block storage
 -ec2 primary storage solution
@@ -249,17 +264,23 @@ EBS (Elastic Block Store)
     -encrypted EBS volumes = data at rest encrypted in the volume, all snapshots/volumes they create are encrypted
     -all data in flight are encrypted (instance to volume and vice versa)
 
-EBS vs. Instance Store
+Instance Store
+-temporary block storage for EC2 instances
 -instances that do not come w a root EBS volume come w an instance store
-  -physically attached to the machine (EBS is network drive)
+  -physically attached to the machine (EBS is network drive) 
+  -becausw instance storage is located on disks physically attached to host instance, no need to provision extra resources
   -provide better i/o
   -ephemeral / temporary storage -> buffer, scratch work, cache etc.
 -survives a reboot but on stop or termination of the instance its attached to, data is lost
+-resilient architecture, can adapt to to loss of any instance
 -cannot resize instances
 -must handle backups manually
+-high i/o performance, low cost 
 
 EFS (Elastic File System)
 -managed Network File System (NFS) that you mount on ec2 instances
+-regional service, but ec2 instances in other regions can connect using inter-region vpc peering 
+-on premises servers can connect to / access EFS using direct connect connect or an AWS VPN
 -highly available, scalable, but more expensive than EBS
 - use cases: wordpress, web services, content management, data sharing, etc.
 -can use security groups to controll access to EFS volumes
@@ -271,6 +292,17 @@ S3 (aka simple storage service)
 -different tiers, infrequent access, glacier, etc.
 -storing content, static websites, photos, etc.
 -transition between storage tiers with life cycle policies 
+  -invalid life cycle transitions include:
+    -any storage class -> amazon s3 standard 
+    -any storage class -> reduced redundancy 
+    -s3 intelligent tiering -> s3 standard-ia
+    -s3 one-zone ia -> standard ia or intelligent tiering
+  -30 days = minimum storage duration before transitioning s3 standard to one-zone ia or standard ia
+-no s3 data transfer charges when data is uploaded / transferred in from the internet (uploads over net are free)
+-S3TA (transfer acceleration)
+  -speed up content transfers to / from S3 by 50-500% on long-distance transfer of large objects
+  -improve transfer performance utilizing globally distributed edge locations / AWS backbone networks
+  -only pay for transfers that are accelerated
 
 Storage Gateway
 -storage service
@@ -285,10 +317,12 @@ RDS (aka relational database service)
 -managed service, main disadvantage is that there is no ssh into the instance that hosts the database
 -backups auto-enabled
 -provides automated backups, and allows DB snapshots, manually triggered backups by users
--use (up to 5) read replicas to scale read ops
+-use (up to 5) read replicas to scale read ops (main purpose is SCALABILITY)
 -main db data is replicated async to the read replica, reads are eventually consistent
+-read replicas follow ASYNCHRONOUS replication, Multi-AZ follows SYNCHRONOUS replication
 -read replicas can be promoted into their own database 
--multi az rds = disaster recovery (not scaling)
+-multi region rds = disaster recovery (not scaling) and local performance
+-multi AZ rds = high availability
 -RDS provides encryption at rest for main db and read replicas with AWS KMS encryption
 -in flight encryption uses SSL certificates to encrypt data from client to RDS in flight
 -can copy an un-encrypted db snapshot into an encrypted one
@@ -297,6 +331,23 @@ RDS (aka relational database service)
 -IAM policies can control who manages RDS database -> works with MySQL and PostgreSql
 -encryption at rest is done when db is created
 -we must deal with security/ routing/ users within the db, aws handles db patching and underlying os patching
+
+AWS PrivateLink
+-highly available/scalable service for privately connecting VPC to services and resources as if they were in the VPC
+-interface endpoint service, can connect privately via an interface vpc endpoint in the VPC w=you want to connect
+-cannot be used to directly expose RDS intance
+-keep traffic inside AWS network without using / requiring internet gateway, VPN, or direct connection
+
+AWS Direct Connect
+-establish dedicated network connection from on premises to AWS
+-connect to AWS Direct Connect location
+-by itself, direct connect doesnt provide an encrypted connection between data center and AWS cloud
+-in order to encrypt connection, use Amazon VPC VPN
+
+AWS site-to-site VPN
+-securely connect on-premises network to Amazon VPC
+-does not provide low latency / high throughput connection by itself, so if this is needed combine with direct connect
+
 
 DynamoDB
 -No SQL database
@@ -329,6 +380,12 @@ IAM (aka Identity and Access Management)
 -policies -> attach policies to users, groups and rules to give permissions
 -roles -> temporary/short term credentials
 
+IAM Policies
+-main elements of a policy statement:
+  -Effect -> specify if we are allowing or denying action
+  -Action -> specific action(s) to allow/deny 
+  -Resource -> ex. an S3 bucket / object
+
 Cloudwatch
 -AWS monitoring
 -CloudWatch Logs 
@@ -342,6 +399,8 @@ Kinesis
 -real time data
 -Kinesis Data Streams
 -Kinesis Firehose
+  -fully managed service for REAL-TIME streaming data
+  -can write directly to S3, Redshift, Amazon OpenSearch, custom http endpoints / http endpoints owned by 3rd party service providers
 -Kinesis sharding
 
 Cloudfront
@@ -350,11 +409,19 @@ Cloudfront
 -content sources include: 
 
 SQS (aka Simple Queue Service)
--decouple applications
+-fully managed message queuing service
+-decouple applications / microservices
 -fifo queue vs standard queue
+-standard queue = maximum throughput, best-effort ordering, at least once delivery
+-fifo queue gaurantees strict ordering and 
+-use for distributed systems, serverless applications, decoupling
 
 SNS (Simple Notification Service)
--another service used for decoupling
+-pub/sub (publish / subscribe) message service
+-messages are published by microservices, distributed systems and other aws services
+
+-another service used for decoupling microservices, distributed systems and serverless 
+-highly available, durable, secure, fully-managed pub/sub messaging service
 
 CloudFormation
 -templates and configurations
@@ -369,12 +436,38 @@ AWS DataSync
 -data transfer
 
 Amazon FSx
+-for microsoft Windows File Server
 -for lustre
--for microsoft active directory
+-Use Amazon FSx File Gateway to provide low latency, on premises access to fully managed file shares in FSx
+-provides benefits of native Windows SMB environment, supports native Windows tools like DFS and Active Directory
+
 
 AWS Glue
 -prepare data for analytics
 -ETL (extract, transform, load) operations
+-DataBrew
+  -fully managed, serverless data preparation tool
+  -no code tool to clean, transform and normalize raw datasets
+  -built-in data profiling capabilities
+  -output is written to S3
+  
+
+Amazon GuardDuty
+-threat detection services that continuously monitors for malicious activity and unauth behavior
+-enable with a few clicks
+-possible data sources include:
+  -AWS CloudTrail Events
+  -VPC Flow Logs
+  -DNS logs
+-can integrate with EventBridge to make GuardDuty alerts actionable 
+
+AWS CloudTrail 
+
+Amazon AppFlow
+-Used for data movement and basic transformation between SaaS applications and AWS services
+-SaaS applications ex. Salesforce Zendesk 
+-does not support transforming or managing datasets already in S3
+-not for complex transformation / management
 
 
 
