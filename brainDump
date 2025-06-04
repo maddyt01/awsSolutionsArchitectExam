@@ -469,6 +469,52 @@ Amazon AppFlow
 -does not support transforming or managing datasets already in S3
 -not for complex transformation / management
 
+TO BE ORGANIZED (notes based on the results of a practice test)
+-If we have an EC2 instance and we want high performance IOPS, temporary storage and cost effectiveness is important => use instance store
+-EBS volumes are persistent storage
+-cost ranking goes : instance < ebs < efs
+-active/passive type failover routing is used when you want a primary resource /group of resourves to be available the majority of the time
+  -NOTE: there is no such thing as an active active failover routing policy in Route 53 
+  (can configure using anything but failover routing policy, just maintain 2 active instances)
+-if you have a multi-region hosted application, route 53 latency routing can improve performance
+-to configure aurora database security to only allow specific ec2 instances (even behind a load balancer) authorize the ec2 security group
+  (not the ASG)
+-only standard amazon sqs queue is allowed as an s3 event notification destination (not fifo queue)
+-dynamodb => fully managed multi region key-value/document database
+-dynamodb stream = ordered flow of info about dynamodb table item changes (create, update, delete)
+-Auror = MySQL and PostgreSQL compatible cloud native relational database
+-common use case = use AWS WAF with CloudFront to protect applications running on any HTTP webserver (ex. EC2 instance)
+-can configure AWS WAF on application load balancer, but NOT directly on an EC2 instance
+-ALB has built-in health check, cannot use EC2 based health checks
+-Recommended to use ALB based health checks for both ASG and ALB
+-There is also an EC2 instance health check type also available
+-Use a dead-letter queue to handle message processing failures when using SQS 
+  -put messages that cannot be processed successfully in dead-letter queue using redrive policy
+-use-case for temporary queue = request-response messaging pattern (ex. processing login request)
+-its possible to create clones of an Aurora DB with database cloning feature (least effort for db admin)
+-Amazon cognito = add user sign-up, sign-in and access control to web/mobile apps
+  -supports sig n in with social identity providers like facebook, google, amazon, and enterprise id providers
+  -use to manage user accounts
+-when kinesis sends ProvisionedThroughputExceededException, use batching to send multiple messages at once 
+-can also increase the number of shards in the short term, but this costs money
+-S3TA speeds up uploads and downloads
+-Cloudfront speeds up uploads and downloads with origin S3 bucket
+-for maximum performance with temporary data (processing, i/o performance) -> instance store
+-EBS volumes are particularly good for file systems, data base etc.
+-Storage gateway = hybrid cloud storage service that gives on premisae access to basically unlimited vloud storage
+-Aurora Replicas can be used to scale reads, and increase availability
+-note aurora has no standby instances, use replicas / multi-az or multi-region deployments
+-s3 meta data is NOT ENCRYPTED, s3 can do client side, server side, and encryption in transit
+-spread placement group spans multiple available zones in same region, macimum 7 running instances / AZ / group
+
+-Watch out for key words that tell you what is important
+  -Centralized -> cannot create new buckets in every region, we want centralized storage
+-reread the questions slow down
+
+
+
+
+
 
 
  
